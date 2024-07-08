@@ -21,16 +21,23 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Loader2 } from "lucide-react";
 import { LoadingButton } from "@/components/loading-button";
+import { Id } from "@/convex/_generated/dataModel";
+
 const formSchema = z.object({
   title: z.string().min(2).max(50),
+  file: z.instanceof(File)
 });
 
 interface UploadDocumentFormProps {
   onUpload: () => void;
 }
 
-export const UploadDocumentForm = ({ onUpload }: UploadDocumentFormProps) => {
+export const UploadDocumentForm = ({ 
+  onUpload
+}: UploadDocumentFormProps) => {
+
   const createDocument = useMutation(api.documents.createDocument);
+  const generateUploadUrl = useMutation(api.documents.generateUploadUrl);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -40,8 +47,20 @@ export const UploadDocumentForm = ({ onUpload }: UploadDocumentFormProps) => {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    await createDocument(values);
+    const url = await generateUploadUrl();
+    console.log(url)
+
+    const result = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": values.file.type },
+      body: values.file,
+    });
+    const { storageId } = await result.json();
+
+    await createDocument({
+      title: values.title,
+      fileId: storageId as Id<"_storage">,
+    });
     onUpload();
   }
 
@@ -56,6 +75,27 @@ export const UploadDocumentForm = ({ onUpload }: UploadDocumentFormProps) => {
               <FormLabel>Title</FormLabel>
               <FormControl>
                 <Input placeholder="Expense Report" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="file"
+          render={({ field: { value, onChange, ...fieldProps } }) => (
+            <FormItem>
+              <FormLabel>File</FormLabel>
+              <FormControl>
+                <Input 
+                  {...fieldProps} 
+                  type="file"
+                  accept=".txt,.xml,.doc"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    onChange(file)
+                  }}  
+                />
               </FormControl>
 
               <FormMessage />
