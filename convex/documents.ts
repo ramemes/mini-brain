@@ -110,6 +110,6 @@ export const askQuestion = action({
       model: 'gpt-3.5-turbo',
     });
     
-    return chatCompletion
+    return chatCompletion.choices[0].message.content
   }
 })
