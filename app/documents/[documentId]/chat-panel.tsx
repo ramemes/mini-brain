@@ -3,12 +3,15 @@ import { Input } from "@/components/ui/input";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
-import { useAction } from "convex/react";
+import { useAction, useQuery } from "convex/react";
 
 export const ChatPanel = ({
   documentId
 } : { documentId: Id<"documents">}) => {
 
+  const chats = useQuery(api.chats.getChatsForDocument, {
+    documentId
+  })
   const askQuestion = useAction(api.documents.askQuestion)
 
   const onSubmitForm = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -21,8 +24,6 @@ export const ChatPanel = ({
       question: text,
       documentId
     })
-
-    console.log(chatCompletion)
   }
 
   return (
@@ -31,13 +32,22 @@ export const ChatPanel = ({
         <div className="bg-slate-950 p-2 rounded">
           Ask any question about this document below:
         </div>
-        <div
-          className={cn("bg-slate-800 p-2 rounded", 
-            true && "text-right"
-          )}
-        >
-          Ask any question about this document below:
-        </div>
+        {chats?.map((chat) => (
+          <div
+            key={chat._id}
+            className={cn(
+              {
+                "bg-slate-800": chat.isHuman,
+                'text-right': chat.isHuman
+              },
+              "rounded p-2"
+            )}
+          >
+            {chat.isHuman ? "You: " : "AI: "}
+            {chat.text}
+          </div>
+        ))}
+
 
       </div>
       <div className="flex gap-2 p-1">
