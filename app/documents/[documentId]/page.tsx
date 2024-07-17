@@ -6,6 +6,7 @@ import { useQuery } from "convex/react";
 import { ChatPanel } from "./chat-panel";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 export default function DocumentPage({
@@ -20,39 +21,56 @@ export default function DocumentPage({
     documentId: params.documentId
   })
 
-  if (!document) {
-    return <div>Loading document</div>
-  }
+
 
   return (
-    <main className="p-24 space-y-8 flex flex-col items-center">
-      <div className="flex justify-between items-center">
-        <h1 className="text-4xl font-bold">{document.title}</h1>
-      </div> 
+    <main className="p-24 space-y-8">
+      {
+      !document && 
+        <div>
+          <div>
+            <Skeleton className="h-[40px] w-[400px]"/>
+          </div>
+          <div className="flex gap-2 mt-8 mb-4">
+            <Skeleton className="h-[40px] w-[80px]"/>
+            <Skeleton className="h-[40px] w-[80px]"/>
+          </div>
+          <Skeleton className="h-[500px] w-full"/>
+        </div>
+      }
+      {
+      document &&
+        <>
+          <div className="flex justify-between items-center">
+            <h1 className="text-4xl font-bold">{document.title}</h1>
+          </div> 
 
-      <div className="flex gap-12 ">
-        <Tabs defaultValue="document" className="w-full max-w-[1200px]">
-          <TabsList className="mb-2">
-            <TabsTrigger value="document">Document</TabsTrigger>
-            <TabsTrigger value="chat">Chat</TabsTrigger>
-          </TabsList>
-          <TabsContent value="document">
-            <div className="bg-gray-900 p-4 rounded-xl flex-1 h-[600px]">
-              {document.documentUrl && 
-                <iframe 
-                  src={document.documentUrl}
-                  className="w-full h-full"
+          <div className="flex gap-12">
+            <Tabs defaultValue="document" className="w-full">
+              <TabsList className="mb-2">
+                <TabsTrigger value="document">Document</TabsTrigger>
+                <TabsTrigger value="chat">Chat</TabsTrigger>
+              </TabsList>
+              <TabsContent value="document">
+                <div className="bg-gray-900 p-4 rounded-xl flex-1 h-[600px]">
+                  {document.documentUrl && 
+                    <iframe 
+                      src={document.documentUrl}
+                      className="w-full h-full"
+                    />
+                  }
+                </div>
+              </TabsContent>
+              <TabsContent value="chat">
+                <ChatPanel
+                  documentId={document._id}
                 />
-              }
-            </div>
-          </TabsContent>
-          <TabsContent value="chat">
-            <ChatPanel
-              documentId={document._id}
-            />
-          </TabsContent>
-        </Tabs>
-      </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </>
+      }
+      
 
       
     </main>

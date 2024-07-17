@@ -23,7 +23,7 @@ export const CreateDocumentButton = () => {
     <Dialog onOpenChange={setIsOpen} open={isOpen}>
       <DialogTrigger asChild>
         <Button className="flex items-center gap-2 ">
-          <Upload className="w-4 h-4" />
+          <Upload className="w-4 h-4"/>
           Upload Document
         </Button>
       </DialogTrigger>
