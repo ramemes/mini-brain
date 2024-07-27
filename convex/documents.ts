@@ -2,7 +2,7 @@ import { action, internalAction, internalMutation, internalQuery, mutation, Muta
 import { ConvexError, v } from "convex/values";
 import { api, internal } from "./_generated/api";
 import OpenAI from 'openai';
-import { Id } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
@@ -20,17 +20,22 @@ export const hasAccessToDocument = async (
   const userId = (await ctx.auth.getUserIdentity())?.tokenIdentifier
 
   if (!userId) {
-    throw new ConvexError('Not authenticated')
+    // throw new ConvexError('Not authenticated')
+    return null
   }
 
   const document = await ctx.db.get(documentId)
 
   if (!document) {
-    throw new ConvexError('Document not found')
+    // throw new ConvexError('Document not found')
+    return null
+
   }
 
   if (document?.tokenIdentifier !== userId) {
-    throw new ConvexError('Not authorized')
+    // throw new ConvexError('Not authorized')
+    return null
+
   }
 
   return {document, userId}
@@ -69,10 +74,13 @@ export const getDocument = query({
     documentId: v.id("documents")
   },
   async handler(ctx, args) {
-    const {document, userId} = await hasAccessToDocument(ctx, args.documentId)
-    if (!document) return null
 
-    return {...document, documentUrl: await ctx.storage.getUrl(document.fileId)}
+    const accessObj = await hasAccessToDocument(ctx, args.documentId) as {document: Doc<"documents">, userId: string}
+
+    if (!accessObj) return null
+
+    const {document, userId} = accessObj
+    return {...document, documentUrl: await ctx.storage.getUrl(document.fileId as Id<'_storage'>)}
   }
 }) 
 
@@ -114,7 +122,7 @@ export const askQuestion = action({
 
     const {document, userId} = await ctx.runQuery(internal.documents.hasAccessToDocumentQuery, {
       documentId: args.documentId
-    })
+    }) as {document: Doc<"documents">, userId: string}
 
     if (!document || !userId) {
       throw new ConvexError('You do not have access to this document')
@@ -140,7 +148,7 @@ export const askQuestion = action({
             content: `please answer this question: ${args.question}`,
           },
         ],
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o-mini',
       });
     
     const response = chatCompletion.choices[0].message.content ?? 'could not generate a response.'
@@ -192,7 +200,7 @@ export const generateDocumentDescription = internalAction({
             content: `please generate a 1 sentence description for this document`,
           },
         ],
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o-mini',
       });
     
     const response = chatCompletion.choices[0].message.content ?? 'could not generate description for this document.'
@@ -215,3 +223,21 @@ export const updateDocumentDescription = internalMutation({
     })
   }
 })
+
+export const deleteDocument = mutation({
+  args: {
+    documentId: v.id("documents")
+  },
+  async handler(ctx, args) {
+
+    const accessObj = await hasAccessToDocument(ctx, args.documentId) as {document: Doc<"documents">, userId: string}
+
+    if (!accessObj) throw new ConvexError('You do not have access to this document')
+
+
+    const {document, userId} = accessObj
+
+    await ctx.storage.delete(document.fileId as Id<'_storage'>)
+    await ctx.db.delete(args.documentId)
+  }
+}) 
