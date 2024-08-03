@@ -4,7 +4,10 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { Header } from "./header";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ 
+  weight: '400',
+  subsets: ["latin"] 
+});
 
 export const metadata: Metadata = {
   title: "Create Next App",

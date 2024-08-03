@@ -19,6 +19,7 @@ import { useMutation } from "convex/react";
 import { TrashIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { set } from "react-hook-form";
 
 interface DeleteDocumentButtonProps {
   documentId: Id<"documents">
@@ -43,6 +44,7 @@ export const DeleteDocumentButton = ({
     })
     .finally(() => {
       setIsLoading(false)
+      setIsOpen(false)
     })
   }
 

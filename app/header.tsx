@@ -15,7 +15,7 @@ export const Header = () => {
             </Link>
           <nav>
             <Link 
-              href="/"
+              href="/dashboard"
               className="hover:text-slate-300"
             >
               Documents

@@ -17,5 +17,10 @@ export default defineSchema({
     text: v.string(),
   })
     .index("by_documentId_tokenIdentifier", ['documentId','tokenIdentifier']),
+  notes: defineTable({ 
+    text: v.string(),
+    tokenIdentifier: v.string(),
+  })
+    .index("by_tokenIdentifier", ['tokenIdentifier']),
   
 }); 
