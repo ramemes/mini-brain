@@ -38,7 +38,7 @@ export const hasAccessToDocument = async (
 
   }
 
-  return {document, userId}
+  return { document, userId }
 }
 
 export const hasAccessToDocumentQuery = internalQuery({
